@@ -205,13 +205,13 @@ export class GoogleMapComponent implements OnInit {
                     return
                 }
                 var icon = {
+                    url: place.icon,
                     size: new google.maps.Size(71, 71),
                     origin: new google.maps.Point(0, 0),
                     anchor: new google.maps.Point(17, 34),
                     scaledSize: new google.maps.Size(25, 25),
                 }
 
-                // Create a marker for each place.
                 this.markers.push(
                     new google.maps.Marker({
                         map: map,
