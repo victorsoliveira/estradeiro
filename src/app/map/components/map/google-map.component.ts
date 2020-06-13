@@ -1,13 +1,13 @@
 import { Component, OnInit, ElementRef, Input, Renderer2, Inject, ViewChild } from '@angular/core'
 import { DOCUMENT } from '@angular/common'
 import { Network, Geolocation } from '@capacitor/core'
-import { IonInput } from '@ionic/angular'
 import { environment } from 'src/environments/environment'
+import { IonInput } from '@ionic/angular'
 
 @Component({
     selector: 'app-google-map',
-    template: '<ion-input placeholder="Coloque o seu destino" #search></ion-input>',
-    styleUrls: ['./google-map.component.css'],
+    template: '<ion-input #search placeholder="Pesquise rotas, pontos de parada, etc" ></ion-input>',
+    styleUrls: ['./google-map.component.scss'],
 })
 export class GoogleMapComponent implements OnInit {
     apiKey: string = environment.apiKey
@@ -16,8 +16,8 @@ export class GoogleMapComponent implements OnInit {
     private mapsLoaded: boolean = false
     private networkHandler = null
 
-    @ViewChild('search')
-    searchInput: ElementRef
+    @ViewChild('search', { read: IonInput })
+    searchInput: IonInput
 
     constructor(private renderer: Renderer2, private element: ElementRef, @Inject(DOCUMENT) private _document) {}
 
@@ -142,11 +142,15 @@ export class GoogleMapComponent implements OnInit {
                     let mapOptions = {
                         center: latLng,
                         zoom: 15,
+                        mapTypeControl: false,
+                        zoomControl: false,
+                        streetViewControl: false,
+                        fullscreenControl: false,
                     }
 
                     this.map = new google.maps.Map(this.element.nativeElement, mapOptions)
-                    this.addSearchBox(this.map)
                     this.addTripEvent(this.map)
+                    this.addSearchBox(this.map)
                     resolve(true)
                 },
                 (err) => {
@@ -182,13 +186,49 @@ export class GoogleMapComponent implements OnInit {
         })
     }
 
-    private addSearchBox(map: google.maps.Map) {
-        var searchBox = new google.maps.places.SearchBox(this.searchInput.nativeElement)
-        map.controls[google.maps.ControlPosition.BOTTOM_LEFT].push(searchBox as any)
-
+    private async addSearchBox(map: google.maps.Map) {
+        const input = await this.searchInput.getInputElement()
+        var searchBox = new google.maps.places.SearchBox(input)
+        map.controls[google.maps.ControlPosition.TOP_LEFT].push(input)
         // Bias the SearchBox results towards current map's viewport.
-        map.addListener('bounds_changed', function () {
+        map.addListener('bounds_changed', () => {
             searchBox.setBounds(map.getBounds())
+        })
+
+        searchBox.addListener('places_changed', () => {
+            var places = searchBox.getPlaces()
+
+            var bounds = new google.maps.LatLngBounds()
+            places.forEach((place) => {
+                if (!place.geometry) {
+                    console.log('Returned place contains no geometry')
+                    return
+                }
+                var icon = {
+                    size: new google.maps.Size(71, 71),
+                    origin: new google.maps.Point(0, 0),
+                    anchor: new google.maps.Point(17, 34),
+                    scaledSize: new google.maps.Size(25, 25),
+                }
+
+                // Create a marker for each place.
+                this.markers.push(
+                    new google.maps.Marker({
+                        map: map,
+                        icon: icon,
+                        title: place.name,
+                        position: place.geometry.location,
+                    })
+                )
+
+                if (place.geometry.viewport) {
+                    // Only geocodes have viewport.
+                    bounds.union(place.geometry.viewport)
+                } else {
+                    bounds.extend(place.geometry.location)
+                }
+            })
+            map.fitBounds(bounds)
         })
     }
 

@@ -7,7 +7,7 @@ export const environment = {
     dialogflow: {
         angularBot: '3416909749ef485e922973e28101e08a',
     },
-    apiKey: '',
+    apiKey: 'AIzaSyCCX1m644Ve2LyyZnmBCCmLOfSpGPem37w',
 }
 
 /*
