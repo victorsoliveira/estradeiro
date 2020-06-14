@@ -12,17 +12,35 @@ export class MapPage implements OnInit {
     searchInput: IonSearchbar
 
     searchQs = new FormControl()
+    routes = null
 
     matchedPlaces
     findPlace: any
+    showRoutes: boolean
+
+    goToDirection
+    response: any
 
     constructor() {}
+
+    selectRoute(routePosition) {
+        this.goToDirection(this.response)
+        this.routes = null
+    }
+
+    onRoutesLoad(routes) {
+        this.routes = routes.routes
+        this.response = routes.response
+    }
+
+    setDirection(cb) {
+        this.goToDirection = cb
+    }
 
     onChangeSearchQs() {
         var service = new google.maps.places.AutocompleteService()
         if (this.searchQs.value) {
             service.getPlacePredictions({ input: this.searchQs.value }, (predictions, status) => {
-                console.log(predictions)
                 if (status === google.maps.places.PlacesServiceStatus.OK) {
                     this.matchedPlaces = predictions
                 }
@@ -38,8 +56,6 @@ export class MapPage implements OnInit {
     setFindPlace(findPlace) {
         this.findPlace = findPlace
     }
-
-    onLoadMap(map) {}
 
     ngOnInit() {
         this.searchQs.valueChanges.subscribe(() => {
