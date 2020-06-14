@@ -3,11 +3,11 @@ import { Component, OnInit } from '@angular/core';
 import { Contacts, Contact } from '@ionic-native/contacts/ngx';
 
 @Component({
-  selector: 'app-contacts',
-  templateUrl: './contacts.page.html',
-  styleUrls: ['./contacts.page.scss'],
+  selector: 'app-community',
+  templateUrl: './community.page.html',
+  styleUrls: ['./community.page.scss'],
 })
-export class ContactsPage implements OnInit {
+export class CommunityPage implements OnInit {
 
   public contacts: Contact[];
 

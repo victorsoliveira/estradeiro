@@ -12,12 +12,20 @@ const routes: Routes = [
           loadChildren: () => import('../map/map.module').then( m => m.MapPageModule)
         },
         {
-          path: 'contacts',
-          loadChildren: () => import('../contacts/contacts.module').then( m => m.ContactsPageModule)
+          path: 'community',
+          loadChildren: () => import('../community/community.module').then( m => m.CommunityPageModule)
         },
         {
           path: 'conversation',
           loadChildren: () => import('../conversation/conversation.module').then( m => m.ConversationPageModule)
+        },
+        {
+          path: 'services',
+          loadChildren: () => import('../services/services.module').then( m => m.ServicesPageModule)
+        },
+        {
+          path: 'profile',
+          loadChildren: () => import('../profile/profile.module').then( m => m.ProfilePageModule)
         }
     ]
   }
