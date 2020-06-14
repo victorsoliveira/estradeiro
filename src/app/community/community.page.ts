@@ -14,7 +14,15 @@ export class CommunityPage implements OnInit {
   constructor(private contactsApi: Contacts) { }
 
   ngOnInit() {
-    this.contactsApi.find(['displayName', 'phoneNumbers', 'photos'], { hasPhoneNumber: true, multiple: true }).then((contacts) => this.contacts = contacts);
+    this.contactsApi.find(['displayName', 'phoneNumbers', 'photos'], 
+          { hasPhoneNumber: true, multiple: true })
+      .then((contacts) => { 
+        this.contacts = contacts
+      });
+  }
+
+  public segmentChanged(ev: any) {
+    console.log(ev);
   }
 
 }

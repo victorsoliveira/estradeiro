@@ -10,7 +10,8 @@
         "test": "ng test",
         "lint": "ng lint",
         "e2e": "ng e2e",
-        "android": "ionic capacitor run android"
+        "android": "ionic capacitor run android",
+        "resources": "capacitor-resources -p android,ios"
     },
     "private": true,
     "dependencies": {
