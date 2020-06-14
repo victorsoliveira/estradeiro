@@ -16,10 +16,6 @@ const routes: Routes = [
           loadChildren: () => import('../community/community.module').then( m => m.CommunityPageModule)
         },
         {
-          path: 'conversation',
-          loadChildren: () => import('../conversation/conversation.module').then( m => m.ConversationPageModule)
-        },
-        {
           path: 'services',
           loadChildren: () => import('../services/services.module').then( m => m.ServicesPageModule)
         },

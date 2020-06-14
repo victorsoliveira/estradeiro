@@ -9,10 +9,7 @@ export class PermissionsService {
 
   public permissionIsGranted =false;
   
-  constructor (
-    private speechRecognition: SpeechRecognition ) {
-
-  }
+  constructor (private speechRecognition: SpeechRecognition) { }
 
   public getPermission(){
 
@@ -34,7 +31,6 @@ export class PermissionsService {
 
   public permissionDeniedNorify() {
     this.permissionIsGranted=false;
-    alert("O estradeiro precisa !");
   }
 
 }
