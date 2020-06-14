@@ -1,7 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 
-import { Contacts, Contact } from '@ionic-native/contacts/ngx';
-
 @Component({
   selector: 'app-community',
   templateUrl: './community.page.html',
@@ -9,12 +7,24 @@ import { Contacts, Contact } from '@ionic-native/contacts/ngx';
 })
 export class CommunityPage implements OnInit {
 
-  public contacts: Contact[];
+  public actualSegment: string;
 
-  constructor(private contactsApi: Contacts) { }
+  constructor() { }
 
   ngOnInit() {
-    this.contactsApi.find(['displayName', 'phoneNumbers', 'photos'], { hasPhoneNumber: true, multiple: true }).then((contacts) => this.contacts = contacts);
+    this.actualSegment = 'messages';
+  }
+
+  public segmentChanged(ev: CustomEvent) {
+    this.actualSegment = ev.detail.value;
+  }
+
+  get showingContacts() {
+    return this.actualSegment === 'contacts';
+  }
+
+  get showingMessages() {
+    return this.actualSegment === 'messages';
   }
 
 }

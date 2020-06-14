@@ -1,0 +1,1 @@
+export const ESTRADEIRO_ID = '45026fb1-8e4a-46b7-bda2-481b769b39ad';

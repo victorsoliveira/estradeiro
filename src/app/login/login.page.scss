@@ -15,6 +15,13 @@
         }
         ion-item {
             width: 100%;
+            ion-label {
+                color: #bbb;
+            }
+            ion-input {
+                margin-left: 20px;
+                color: #444;
+            }
         }
     }
 }

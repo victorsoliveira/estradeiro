@@ -1,0 +1,10 @@
+<ng-container *ngFor="let message of messages | async">
+    <div class="message" [ngClass]="{ 'from': message.identifier !== itsMe, 'to': message.identifier === itsMe }" (click)="play(message)">
+        <ion-icon name="play-circle"></ion-icon>
+        <div class="info">
+            <span>{{ message.contact }}</span>
+            <ion-icon name="checkmark" *ngIf="message.processed "></ion-icon>
+        </div>
+
+    </div>
+</ng-container>
