@@ -15,11 +15,34 @@
 </ion-header>
 
 <ion-content>
-    <app-google-map (exportFindPlace)="setFindPlace($event)"></app-google-map>
+    <app-google-map
+        (onRoutesLoad)="onRoutesLoad($event)"
+        (exportSetDirection)="setDirection($event)"
+        (exportFindPlace)="setFindPlace($event)"
+    ></app-google-map>
 </ion-content>
-
-<!-- <ion-footer>
-    <ion-toolbar color="secundary">
-        Teste
+<ion-footer *ngIf="routes">
+    <ion-toolbar class="secundary" #rotaToolbar>
+        <ion-grid>
+            <ion-row>
+                <ion-col *ngFor="route of routes; let i = index">
+                    <ion-chip color="primary">
+                        <div>
+                            Rota {{i + 1}}
+                        </div>
+                        <div>
+                            {{ route?.distance }}
+                        </div>
+                        <div>{{ route?.time }}</div>
+                        <div>{{ route?.stops }}</div>
+                    </ion-chip>
+                </ion-col>
+            </ion-row>
+            <ion-row>
+                <ion-col>
+                    <ion-button class="primary" (click)="selectRoute(0)">Confirmar Rota</ion-button>
+                </ion-col>
+            </ion-row>
+        </ion-grid>
     </ion-toolbar>
-</ion-footer> -->
+</ion-footer>

@@ -5,6 +5,7 @@ import { environment } from 'src/environments/environment'
 import { IonInput, IonSearchbar } from '@ionic/angular'
 import { MapService } from '../../map.service'
 import { Lugar, CATEGORIA_LUGAR } from 'src/app/models/lugar'
+import { platformBrowserDynamic } from '@angular/platform-browser-dynamic'
 
 @Component({
     selector: 'app-google-map',
@@ -19,17 +20,26 @@ export class GoogleMapComponent implements OnInit {
     private networkHandler = null
     private lugares
 
-    // @ViewChild('search', { read: IonInput })
-    // searchInput: IonInput
+    private routes = []
 
     @ViewChild('map', { read: ElementRef })
     mapElement: ElementRef
 
-    @Input()
-    searchInput: IonSearchbar
-
     @Output()
     exportFindPlace = new EventEmitter()
+
+    @Output()
+    exportSetDirection = new EventEmitter()
+
+    @Output()
+    onRoutesLoad = new EventEmitter()
+
+    controls: any = {}
+
+    place: google.maps.places.PlaceResult
+    places: Lugar[]
+    stoppoints: Object
+    lines: any = []
 
     constructor(private mapService: MapService, private renderer: Renderer2, private element: ElementRef, @Inject(DOCUMENT) private _document) {}
 
@@ -37,16 +47,35 @@ export class GoogleMapComponent implements OnInit {
         // console.log(Array.from(new Set(lugares.map((lugar) => lugar.category))))
         this.init().then(
             (map) => {
-                // this.mapService.buscarLugares().subscribe((places) => {
-                //     this.addPlaces(places, this.map)
-                // })
+                this.mapService.buscarLugares().subscribe((places) => {
+                    this.places = places
+                })
+
+                this.mapService.buscarPontosDeParadas().subscribe((stoppoints) => {
+                    this.stoppoints = stoppoints
+                })
                 this.exportFindPlace.emit(this.findPlace.bind(this))
+                this.exportSetDirection.emit(this.setDirection.bind(this))
+
+                this.addRecenterButton()
+
                 console.log('Google Maps ready.')
             },
             (err) => {
                 console.log(err)
             }
         )
+    }
+
+    private setDirection(response) {
+        const directionsRenderer = new google.maps.DirectionsRenderer({
+            map: this.map,
+        })
+        this.lines.forEach((line) => {
+            line.setMap(null)
+        })
+        directionsRenderer.setDirections(response)
+        this.element.nativeElement.style.opacity = 1
     }
 
     private init(): Promise<any> {
@@ -139,12 +168,18 @@ export class GoogleMapComponent implements OnInit {
             script.id = 'googleMaps'
 
             if (this.apiKey) {
-                script.src = 'https://maps.googleapis.com/maps/api/js?key=' + this.apiKey + '&callback=mapInit&libraries=places'
+                script.src = 'https://maps.googleapis.com/maps/api/js?key=' + this.apiKey + '&callback=mapInit&libraries=places,geometry'
             } else {
-                script.src = 'https://maps.googleapis.com/maps/api/js?callback=mapInit&libraries=places'
+                script.src = 'https://maps.googleapis.com/maps/api/js?callback=mapInit&libraries=places,geometry'
             }
 
             this.renderer.appendChild(this._document.body, script)
+        })
+    }
+
+    private centerMap() {
+        Geolocation.getCurrentPosition().then((position) => {
+            this.map.setCenter({ lat: position.coords.latitude, lng: position.coords.longitude })
         })
     }
 
@@ -152,8 +187,6 @@ export class GoogleMapComponent implements OnInit {
         return new Promise((resolve, reject) => {
             Geolocation.getCurrentPosition().then(
                 (position) => {
-                    console.log(position)
-
                     let latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude)
 
                     let mapOptions = {
@@ -167,7 +200,7 @@ export class GoogleMapComponent implements OnInit {
 
                     this.map = new google.maps.Map(this.mapElement.nativeElement, mapOptions)
                     // this.addTripEvent(this.map)
-                    // this.addSearchBox(this.map)
+
                     resolve(true)
                 },
                 (err) => {
@@ -175,6 +208,109 @@ export class GoogleMapComponent implements OnInit {
                 }
             )
         })
+    }
+
+    private addRecenterButton() {
+        const recenterBtnCtx = this._document.createElement('div')
+        const recenterBtn = this._document.createElement('img')
+
+        this.controls.recenterBtn = [recenterBtnCtx, recenterBtn]
+
+        recenterBtn.src = 'assets/Icones/11.svg'
+        recenterBtnCtx.className = 'recenter-btn'
+        recenterBtnCtx.index = 1
+        recenterBtnCtx.appendChild(recenterBtn)
+        this.mapElement.nativeElement.appendChild(recenterBtnCtx)
+        this.map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(recenterBtnCtx)
+        recenterBtn.addEventListener('click', () => {
+            this.centerMap()
+        })
+    }
+
+    private addRouteButton() {
+        const recenterBtnCtx = this._document.createElement('div')
+        const recenterBtn = this._document.createElement('img')
+        this.controls.routeButton = [recenterBtnCtx, recenterBtn]
+        recenterBtn.src = 'assets/Icones/3.svg'
+        recenterBtnCtx.className = 'route-btn'
+        recenterBtnCtx.index = 2
+        recenterBtnCtx.appendChild(recenterBtn)
+
+        this.mapElement.nativeElement.appendChild(recenterBtnCtx)
+        this.map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(recenterBtnCtx)
+        recenterBtn.addEventListener('click', () => {
+            var directionsService = new google.maps.DirectionsService()
+
+            Geolocation.getCurrentPosition().then((position) => {
+                const origin = { lat: position.coords.latitude, lng: position.coords.longitude }
+                const destination = this.place.geometry.location
+                directionsService.route(
+                    {
+                        travelMode: google.maps.TravelMode.DRIVING,
+                        origin,
+                        destination,
+                        provideRouteAlternatives: true,
+                    },
+                    (response, status) => {
+                        if (status === 'OK') {
+                            const colorLine = (index) => {
+                                return index === 0 ? 'green' : 'gray'
+                            }
+                            response.routes.forEach((route, index) => {
+                                const possibleRoute = {
+                                    distance: route.legs[0].distance.value / 1000 + ' Km',
+                                    time: route.legs[0].duration.value / 3600 + 'horas',
+                                    stops: Math.ceil(route.legs[0].duration.value / 3600 / 4.5) + ' paradas recomendadas',
+                                }
+
+                                this.routes.push(possibleRoute)
+
+                                const line = new google.maps.Polyline({
+                                    path: route.overview_path,
+                                    strokeColor: colorLine(index), // you might want different colors per suggestion
+                                    strokeOpacity: 0.7,
+                                    strokeWeight: 3,
+                                })
+                                this.lines.push(line)
+                                line.setMap(this.map)
+                                var bounds = new google.maps.LatLngBounds(origin, destination)
+                                this.map.fitBounds(bounds)
+                            })
+                            this.onRoutesLoad.emit({ routes: this.routes, response: response })
+                            this.element.nativeElement.style.opacity = 0.5
+                        }
+                    }
+                )
+            })
+        })
+    }
+
+    private setPlaces() {
+        // this.places.forEach((place) => {
+        //     if (place.category === CATEGORIA_LUGAR.PONTO_PARADA) {
+        //         return
+        //     }
+        //     const contains = google.maps.geometry.poly.containsLocation(
+        //         new google.maps.LatLng(parseFloat(place.lat), parseFloat(place.long)),
+        //         new google.maps.Polygon({ paths: line.getPath() })
+        //     )
+        //     if (contains) {
+        //         this.addPlace(place, this.map)
+        //     }
+        // })
+        // ;(this.stoppoints as any).forEach((stoppoint) => {
+        //     const contains = google.maps.geometry.poly.containsLocation(
+        //         new google.maps.LatLng(
+        //             parseFloat(stoppoint.lat) / Math.pow(10, 6),
+        //             parseFloat(stoppoint.long) / Math.pow(10, 6)
+        //         ),
+        //         new google.maps.Polygon({ paths: line.getPath() })
+        //     )
+        //     console.log(contains)
+        //     if (contains) {
+        //         this.addStoppoint(stoppoint, this.map)
+        //     }
+        // })
     }
 
     private getPlaceDetails(place): Promise<google.maps.places.PlaceResult> {
@@ -199,18 +335,8 @@ export class GoogleMapComponent implements OnInit {
             return
         }
 
-        console.log(place)
-        const direction = place.geometry.location
-
-        var directionsService = new google.maps.DirectionsService()
-        var directionsRenderer = new google.maps.DirectionsRenderer({
-            draggable: true,
-            map: this.map,
-            panel: document.getElementById('right-panel'),
-        })
-
         var icon = {
-            url: place.icon,
+            url: 'assets/Icones/15.svg',
             size: new google.maps.Size(71, 71),
             origin: new google.maps.Point(0, 0),
             anchor: new google.maps.Point(17, 34),
@@ -232,7 +358,10 @@ export class GoogleMapComponent implements OnInit {
         } else {
             bounds.extend(place.geometry.location)
         }
+        this.place = place
         this.map.fitBounds(bounds)
+
+        this.addRouteButton()
     }
 
     private addInfoWindow(map: google.maps.Map) {
@@ -261,91 +390,47 @@ export class GoogleMapComponent implements OnInit {
         })
     }
 
-    private addPlaces(places: Array<Lugar>, map: google.maps.Map) {
-        places.forEach((place) => {
-            let icon
-            switch (place.category) {
-                case CATEGORIA_LUGAR.BORRACHARIA:
-                    icon = 'assets/map/10.svg'
-                    break
-                case CATEGORIA_LUGAR.HOSPEDAGEM:
-                    icon = 'assets/map/6.svg'
-                    break
-                case CATEGORIA_LUGAR.RESTAURANTE:
-                    icon = 'assets/map/2.svg'
-                    break
-                case CATEGORIA_LUGAR.OFICINA_MECANICA:
-                    icon = 'assets/map/10.svg'
-                    break
-                default:
-                    icon = null
-                    break
-            }
-            var marker = new google.maps.Marker({
-                position: { lat: parseFloat(place.lat), lng: parseFloat(place.long) },
-                map: map,
-                title: place.category + `${place.category} - ${place.name}`,
-                icon,
-            })
-
-            this.markers.push(marker)
+    private addPlace(place: Lugar, map: google.maps.Map) {
+        let icon
+        switch (place.category) {
+            case CATEGORIA_LUGAR.BORRACHARIA:
+                icon = 'assets/map/10.svg'
+                break
+            case CATEGORIA_LUGAR.HOSPEDAGEM:
+                icon = 'assets/map/6.svg'
+                break
+            case CATEGORIA_LUGAR.RESTAURANTE:
+                icon = 'assets/map/2.svg'
+                break
+            case CATEGORIA_LUGAR.OFICINA_MECANICA:
+                icon = 'assets/map/10.svg'
+                break
+            default:
+                icon = null
+                break
+        }
+        var marker = new google.maps.Marker({
+            position: { lat: parseFloat(place.lat), lng: parseFloat(place.long) },
+            map: map,
+            title: place.category + `${place.category} - ${place.name}`,
+            icon,
         })
+
+        this.markers.push(marker)
     }
 
-    private async addSearchBox(map: google.maps.Map) {
-        const input = await this.searchInput.getInputElement()
-        var searchBox = new google.maps.places.SearchBox(document.getElementsByClassName('searchbar-input')[0] as any)
-        map.controls[google.maps.ControlPosition.TOP_LEFT].push(input)
-        // Bias the SearchBox results towards current map's viewport.
-        map.addListener('bounds_changed', () => {
-            searchBox.setBounds(map.getBounds())
+    private addStoppoint(stopPoint: PontoDeParada, map: google.maps.Map) {
+        if (!stopPoint.fuel_supply) {
+            return
+        }
+        var marker = new google.maps.Marker({
+            position: { lat: parseFloat(stopPoint.lat) / Math.pow(10, 6), lng: parseFloat(stopPoint.long) / Math.pow(10, 6) },
+            map: map,
+            title: `Ponto de parada - ${stopPoint.road}`,
+            icon: 'assets/map/4.svg',
         })
 
-        searchBox.addListener('places_changed', () => {
-            var places = searchBox.getPlaces()
-
-            var bounds = new google.maps.LatLngBounds()
-            places.forEach((place) => {
-                if (!place.geometry) {
-                    console.log('Returned place contains no geometry')
-                    return
-                }
-                console.log(place)
-                const direction = place.geometry.location
-
-                var directionsService = new google.maps.DirectionsService()
-                var directionsRenderer = new google.maps.DirectionsRenderer({
-                    draggable: true,
-                    map: map,
-                    panel: document.getElementById('right-panel'),
-                })
-
-                var icon = {
-                    url: place.icon,
-                    size: new google.maps.Size(71, 71),
-                    origin: new google.maps.Point(0, 0),
-                    anchor: new google.maps.Point(17, 34),
-                    scaledSize: new google.maps.Size(25, 25),
-                }
-
-                this.markers.push(
-                    new google.maps.Marker({
-                        map: map,
-                        icon: icon,
-                        title: place.name,
-                        position: place.geometry.location,
-                    })
-                )
-
-                if (place.geometry.viewport) {
-                    // Only geocodes have viewport.
-                    bounds.union(place.geometry.viewport)
-                } else {
-                    bounds.extend(place.geometry.location)
-                }
-            })
-            map.fitBounds(bounds)
-        })
+        this.markers.push(marker)
     }
 
     private displayRoute(origin, destination, service: google.maps.DirectionsService, display) {
