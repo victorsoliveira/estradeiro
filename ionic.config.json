@@ -1,8 +1,8 @@
 {
-  "name": "estradeiro",
-  "integrations": {
-    "capacitor": {},
-    "cordova": {}
-  },
-  "type": "angular"
+    "name": "estradeiro",
+    "integrations": {
+        "capacitor": {},
+        "cordova": {}
+    },
+    "type": "angular"
 }

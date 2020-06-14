@@ -1,12 +1,14 @@
-import { Component, OnInit, ElementRef, Input, Renderer2, Inject, ViewChild } from '@angular/core'
+import { Component, OnInit, ElementRef, Input, Renderer2, Inject, ViewChild, Output, EventEmitter } from '@angular/core'
 import { DOCUMENT } from '@angular/common'
 import { Network, Geolocation } from '@capacitor/core'
 import { environment } from 'src/environments/environment'
-import { IonInput } from '@ionic/angular'
+import { IonInput, IonSearchbar } from '@ionic/angular'
+import { MapService } from '../../map.service'
+import { Lugar, CATEGORIA_LUGAR } from 'src/app/models/lugar'
 
 @Component({
     selector: 'app-google-map',
-    template: '',
+    templateUrl: './google-map.component.html',
     styleUrls: ['./google-map.component.scss'],
 })
 export class GoogleMapComponent implements OnInit {
@@ -15,15 +17,30 @@ export class GoogleMapComponent implements OnInit {
     public markers: any[] = []
     private mapsLoaded: boolean = false
     private networkHandler = null
+    private lugares
 
-    @ViewChild('search', { read: IonInput })
-    searchInput: IonInput
+    // @ViewChild('search', { read: IonInput })
+    // searchInput: IonInput
 
-    constructor(private renderer: Renderer2, private element: ElementRef, @Inject(DOCUMENT) private _document) {}
+    @ViewChild('map', { read: ElementRef })
+    mapElement: ElementRef
+
+    @Input()
+    searchInput: IonSearchbar
+
+    @Output()
+    exportFindPlace = new EventEmitter()
+
+    constructor(private mapService: MapService, private renderer: Renderer2, private element: ElementRef, @Inject(DOCUMENT) private _document) {}
 
     ngOnInit() {
+        // console.log(Array.from(new Set(lugares.map((lugar) => lugar.category))))
         this.init().then(
-            (res) => {
+            (map) => {
+                // this.mapService.buscarLugares().subscribe((places) => {
+                //     this.addPlaces(places, this.map)
+                // })
+                this.exportFindPlace.emit(this.findPlace.bind(this))
                 console.log('Google Maps ready.')
             },
             (err) => {
@@ -148,9 +165,9 @@ export class GoogleMapComponent implements OnInit {
                         fullscreenControl: false,
                     }
 
-                    this.map = new google.maps.Map(this.element.nativeElement, mapOptions)
-                    this.addTripEvent(this.map)
-                    //this.addSearchBox(this.map)
+                    this.map = new google.maps.Map(this.mapElement.nativeElement, mapOptions)
+                    // this.addTripEvent(this.map)
+                    // this.addSearchBox(this.map)
                     resolve(true)
                 },
                 (err) => {
@@ -160,7 +177,65 @@ export class GoogleMapComponent implements OnInit {
         })
     }
 
-    private addTripEvent(map: google.maps.Map) {
+    private getPlaceDetails(place): Promise<google.maps.places.PlaceResult> {
+        return new Promise((resolve) => {
+            const request = {
+                placeId: place.place_id,
+            }
+
+            const service = new google.maps.places.PlacesService(this.map)
+
+            service.getDetails(request, (place) => {
+                resolve(place)
+            })
+        })
+    }
+
+    public async findPlace(placeParams: google.maps.places.PlaceDetailsRequest) {
+        const place = await this.getPlaceDetails(placeParams)
+        var bounds = new google.maps.LatLngBounds()
+        if (!place.geometry) {
+            console.log('Returned place contains no geometry')
+            return
+        }
+
+        console.log(place)
+        const direction = place.geometry.location
+
+        var directionsService = new google.maps.DirectionsService()
+        var directionsRenderer = new google.maps.DirectionsRenderer({
+            draggable: true,
+            map: this.map,
+            panel: document.getElementById('right-panel'),
+        })
+
+        var icon = {
+            url: place.icon,
+            size: new google.maps.Size(71, 71),
+            origin: new google.maps.Point(0, 0),
+            anchor: new google.maps.Point(17, 34),
+            scaledSize: new google.maps.Size(25, 25),
+        }
+
+        this.markers.push(
+            new google.maps.Marker({
+                map: this.map,
+                icon: icon,
+                title: place.name,
+                position: place.geometry.location,
+            })
+        )
+
+        if (place.geometry.viewport) {
+            // Only geocodes have viewport.
+            bounds.union(place.geometry.viewport)
+        } else {
+            bounds.extend(place.geometry.location)
+        }
+        this.map.fitBounds(bounds)
+    }
+
+    private addInfoWindow(map: google.maps.Map) {
         map.addListener('click', (position) => {
             console.log(position)
             var infowindow = new google.maps.InfoWindow({
@@ -186,9 +261,40 @@ export class GoogleMapComponent implements OnInit {
         })
     }
 
+    private addPlaces(places: Array<Lugar>, map: google.maps.Map) {
+        places.forEach((place) => {
+            let icon
+            switch (place.category) {
+                case CATEGORIA_LUGAR.BORRACHARIA:
+                    icon = 'assets/map/10.svg'
+                    break
+                case CATEGORIA_LUGAR.HOSPEDAGEM:
+                    icon = 'assets/map/6.svg'
+                    break
+                case CATEGORIA_LUGAR.RESTAURANTE:
+                    icon = 'assets/map/2.svg'
+                    break
+                case CATEGORIA_LUGAR.OFICINA_MECANICA:
+                    icon = 'assets/map/10.svg'
+                    break
+                default:
+                    icon = null
+                    break
+            }
+            var marker = new google.maps.Marker({
+                position: { lat: parseFloat(place.lat), lng: parseFloat(place.long) },
+                map: map,
+                title: place.category + `${place.category} - ${place.name}`,
+                icon,
+            })
+
+            this.markers.push(marker)
+        })
+    }
+
     private async addSearchBox(map: google.maps.Map) {
         const input = await this.searchInput.getInputElement()
-        var searchBox = new google.maps.places.SearchBox(input)
+        var searchBox = new google.maps.places.SearchBox(document.getElementsByClassName('searchbar-input')[0] as any)
         map.controls[google.maps.ControlPosition.TOP_LEFT].push(input)
         // Bias the SearchBox results towards current map's viewport.
         map.addListener('bounds_changed', () => {
@@ -204,6 +310,16 @@ export class GoogleMapComponent implements OnInit {
                     console.log('Returned place contains no geometry')
                     return
                 }
+                console.log(place)
+                const direction = place.geometry.location
+
+                var directionsService = new google.maps.DirectionsService()
+                var directionsRenderer = new google.maps.DirectionsRenderer({
+                    draggable: true,
+                    map: map,
+                    panel: document.getElementById('right-panel'),
+                })
+
                 var icon = {
                     url: place.icon,
                     size: new google.maps.Size(71, 71),
@@ -230,6 +346,25 @@ export class GoogleMapComponent implements OnInit {
             })
             map.fitBounds(bounds)
         })
+    }
+
+    private displayRoute(origin, destination, service: google.maps.DirectionsService, display) {
+        service.route(
+            {
+                origin: origin,
+                destination: destination,
+                waypoints: [{ location: 'Adelaide, SA' }, { location: 'Broken Hill, NSW' }],
+                travelMode: google.maps.TravelMode.DRIVING,
+                avoidTolls: true,
+            },
+            function (response, status) {
+                if (status === 'OK') {
+                    display.setDirections(response)
+                } else {
+                    alert('Could not display directions due to: ' + status)
+                }
+            }
+        )
     }
 
     public startTrip() {

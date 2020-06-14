@@ -1,9 +1,25 @@
 <ion-header>
     <ion-toolbar color="primary">
-        <ion-searchbar animated placeholder="Pesquise por locais, pontos de parada"></ion-searchbar>
+        <ion-searchbar
+            animated
+            placeholder="Pesquise por locais, pontos de parada"
+            (keypress)="onChangeSearchQs()"
+            [formControl]="searchQs"
+        ></ion-searchbar>
+        <ion-list>
+            <ion-item *ngFor="let place of matchedPlaces" (click)="findPlaceAndClear(place)">
+                <ion-label>{{place.description}}</ion-label>
+            </ion-item>
+        </ion-list>
     </ion-toolbar>
 </ion-header>
 
 <ion-content>
-    <app-google-map></app-google-map>
+    <app-google-map (exportFindPlace)="setFindPlace($event)"></app-google-map>
 </ion-content>
+
+<!-- <ion-footer>
+    <ion-toolbar color="secundary">
+        Teste
+    </ion-toolbar>
+</ion-footer> -->
