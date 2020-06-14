@@ -6,7 +6,7 @@ import { IonInput } from '@ionic/angular'
 
 @Component({
     selector: 'app-google-map',
-    template: '<ion-input #search placeholder="Pesquise rotas, pontos de parada, etc" ></ion-input>',
+    template: '',
     styleUrls: ['./google-map.component.scss'],
 })
 export class GoogleMapComponent implements OnInit {
@@ -150,7 +150,7 @@ export class GoogleMapComponent implements OnInit {
 
                     this.map = new google.maps.Map(this.element.nativeElement, mapOptions)
                     this.addTripEvent(this.map)
-                    this.addSearchBox(this.map)
+                    //this.addSearchBox(this.map)
                     resolve(true)
                 },
                 (err) => {

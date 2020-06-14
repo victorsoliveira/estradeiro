@@ -29,17 +29,7 @@
 @import "~@ionic/angular/css/text-transformation.css";
 @import "~@ionic/angular/css/flex-utils.css";
 @import './theme/variables.scss';
-:root {
-    --ion-color-primary: #21c25e;
-    --ion-color-primary-rgb: 33, 194, 94;
-    --ion-color-primary-contrast: #fff;
-    --ion-color-primary-contrast-rgb: 0, 0, 0;
-    --ion-color-primary-shade: #1dab53;
-    --ion-color-primary-tint: #37c86e;
-}
-
 @mixin input {
-    background: var(--ion-background-color);
     border-radius: 6px;
     padding: 1em;
     width: 100%;
