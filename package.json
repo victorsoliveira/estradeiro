@@ -33,6 +33,7 @@
         "cordova-plugin-contacts": "^3.0.1",
         "cordova-plugin-speechrecognition": "^1.2.0",
         "cordova-plugin-tts": "^0.2.3",
+        "material-design-icons": "^3.0.1",
         "rxjs": "~6.5.1",
         "tslib": "^1.10.0",
         "zone.js": "~0.10.2"

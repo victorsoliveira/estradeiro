@@ -10,6 +10,7 @@
 */
 
 /* Core CSS required for Ionic components to work properly */
+@import '~material-design-icons/iconfont/material-icons.css';
 @import '~@ionic/angular/css/core.css';
 
 /* Basic CSS for apps built with Ionic */
@@ -44,5 +45,8 @@
             @include input;
             font-size: 14px;
         }
+    }
+    .map-footer {
+        z-index: 9000;
     }
 }

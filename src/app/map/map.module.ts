@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core'
 import { CommonModule } from '@angular/common'
-import { FormsModule, ReactiveFormsModule } from '@angular/forms'
+import { FormsModule } from '@angular/forms'
 
 import { IonicModule } from '@ionic/angular'
 
@@ -8,9 +8,12 @@ import { MapPageRoutingModule } from './map-routing.module'
 
 import { MapPage } from './map.page'
 import { GoogleMapComponent } from './components/map/google-map.component'
+import { HttpClientModule } from '@angular/common/http'
+import { MapService } from './map.service'
 
 @NgModule({
-    imports: [CommonModule, ReactiveFormsModule, IonicModule, MapPageRoutingModule],
+    imports: [CommonModule, IonicModule, MapPageRoutingModule, HttpClientModule],
     declarations: [MapPage, GoogleMapComponent],
+    providers: [MapService],
 })
 export class MapPageModule {}

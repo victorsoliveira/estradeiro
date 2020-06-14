@@ -1,7 +1,7 @@
 {
-  "name": "estradeiro",
-  "integrations": {
-    "capacitor": {}
-  },
-  "type": "angular"
+    "name": "estradeiro",
+    "integrations": {
+        "capacitor": {}
+    },
+    "type": "angular"
 }
