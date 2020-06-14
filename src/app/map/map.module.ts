@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core'
 import { CommonModule } from '@angular/common'
-import { FormsModule } from '@angular/forms'
+import { ReactiveFormsModule } from '@angular/forms'
 
 import { IonicModule } from '@ionic/angular'
 
@@ -12,7 +12,7 @@ import { HttpClientModule } from '@angular/common/http'
 import { MapService } from './map.service'
 
 @NgModule({
-    imports: [CommonModule, IonicModule, MapPageRoutingModule, HttpClientModule],
+    imports: [CommonModule, IonicModule, MapPageRoutingModule, ReactiveFormsModule, HttpClientModule],
     declarations: [MapPage, GoogleMapComponent],
     providers: [MapService],
 })

@@ -1,0 +1,20 @@
+:host {
+    padding: 20px;
+    .screen {
+        align-items: center;
+        flex-direction: column;
+        display: flex;
+        h3 {
+            font-weight: 700;
+        }
+        p {
+            text-align: center;
+        }
+        ion-button {
+            margin-top: 40px;
+        }
+        ion-item {
+            width: 100%;
+        }
+    }
+}
