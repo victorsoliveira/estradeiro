@@ -279,8 +279,8 @@ export class GoogleMapComponent implements OnInit {
                             }
                             response.routes.forEach((route, index) => {
                                 const possibleRoute = {
-                                    distance: route.legs[0].distance.value / 1000 + ' Km',
-                                    time: route.legs[0].duration.value / 3600 + 'horas',
+                                    distance: route.legs[0].distance.value / 1000,
+                                    time: route.legs[0].duration.value / 3600,
                                     stops: Math.ceil(route.legs[0].duration.value / 3600 / 4.5) + ' paradas recomendadas',
                                 }
 

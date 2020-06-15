@@ -1,11 +1,6 @@
 <ion-header>
     <ion-toolbar color="primary">
-        <ion-searchbar
-            animated
-            placeholder="Pesquise por locais, pontos de parada"
-            (keypress)="onChangeSearchQs()"
-            [formControl]="searchQs"
-        ></ion-searchbar>
+        <ion-searchbar animated placeholder="Pesquise por locais, pontos de parada" (keypress)="onChangeSearchQs()" [formControl]="searchQs"></ion-searchbar>
         <ion-list>
             <ion-item *ngFor="let place of matchedPlaces" (click)="findPlaceAndClear(place)">
                 <ion-label>{{place.description}}</ion-label>
@@ -15,34 +10,24 @@
 </ion-header>
 
 <ion-content>
-    <app-google-map
-        (onRoutesLoad)="onRoutesLoad($event)"
-        (exportSetDirection)="setDirection($event)"
-        (exportFindPlace)="setFindPlace($event)"
-    ></app-google-map>
+    <app-google-map (onRoutesLoad)="onRoutesLoad($event)" (exportSetDirection)="setDirection($event)" (exportFindPlace)="setFindPlace($event)"></app-google-map>
 </ion-content>
 <ion-footer *ngIf="routes">
-    <ion-toolbar class="secundary" #rotaToolbar>
-        <ion-grid>
-            <ion-row>
-                <ion-col *ngFor="route of routes; let i = index">
-                    <ion-chip color="primary">
-                        <div>
-                            Rota {{i + 1}}
-                        </div>
-                        <div>
-                            {{ route?.distance }}
-                        </div>
-                        <div>{{ route?.time }}</div>
-                        <div>{{ route?.stops }}</div>
-                    </ion-chip>
-                </ion-col>
-            </ion-row>
-            <ion-row>
-                <ion-col>
-                    <ion-button class="primary" (click)="selectRoute(0)">Confirmar Rota</ion-button>
-                </ion-col>
-            </ion-row>
-        </ion-grid>
-    </ion-toolbar>
+
+    <section *ngFor="route of routes; let i = index">
+
+        <div class="title">
+            <strong>Rota {{i + 1}}</strong>
+        </div>
+        <div class="distance">{{ route?.distance }} <small>km</small></div>
+        <div class="time">{{ route?.time }} <small>horas</small></div>
+        <div class="more_info">{{ route?.stops }}</div>
+
+        <div class="actions">
+            <ion-button color="success" (click)="selectRoute(0)">Confirmar Rota</ion-button>
+            <ion-button color="danger" (click)="cancelRoute(0)">Esquecer Rota</ion-button>
+        </div>
+
+    </section>
+
 </ion-footer>

@@ -8,7 +8,7 @@ export const environment = {
         bot: '3416909749ef485e922973e28101e08a',
     },
     apiKey: 'AIzaSyCCX1m644Ve2LyyZnmBCCmLOfSpGPem37w',
-    apiUrl: 'https://929f9fe14ba4.ngrok.io'
+    apiUrl: 'https://estradeiro.herokuapp.com'
 }
 
 /*
