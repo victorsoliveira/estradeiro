@@ -6,6 +6,7 @@ import { IonInput, IonSearchbar } from '@ionic/angular'
 import { MapService } from '../../map.service'
 import { Lugar, CATEGORIA_LUGAR } from 'src/app/models/lugar'
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic'
+import { SplashScreen } from '@ionic-native/splash-screen/ngx'
 
 @Component({
     selector: 'app-google-map',
@@ -48,18 +49,26 @@ export class GoogleMapComponent implements OnInit {
     lines: any = []
     currentRoute: any
 
-    constructor(private mapService: MapService, private renderer: Renderer2, private element: ElementRef, @Inject(DOCUMENT) private _document) {}
+    constructor(
+        private splashScreen: SplashScreen,
+        private mapService: MapService,
+        private renderer: Renderer2,
+        private element: ElementRef,
+        @Inject(DOCUMENT) private _document
+    ) {}
 
     ngOnInit() {
         // console.log(Array.from(new Set(lugares.map((lugar) => lugar.category))))
         this.init().then(
             (map) => {
+                this.splashScreen.show()
                 this.mapService.buscarLugares().subscribe((places) => {
                     this.places = places
                 })
 
                 this.mapService.buscarPontosDeParadas().subscribe((stoppoints) => {
                     this.stoppoints = stoppoints
+                    this.splashScreen.hide()
                 })
                 this.exportFindPlace.emit(this.findPlace.bind(this))
                 this.exportSetDirection.emit(this.setDirection.bind(this))
@@ -93,6 +102,7 @@ export class GoogleMapComponent implements OnInit {
     }
 
     verParadasRecomendadas(route) {
+        this.splashScreen.show()
         const line = new google.maps.Polyline({
             path: this.currentRoute.overview_path,
             strokeOpacity: 1,
@@ -100,6 +110,7 @@ export class GoogleMapComponent implements OnInit {
         })
         this.setPlacesMarkersOnRoute(line)
         this.setStopPointsMarkersOnRoute(line)
+        this.splashScreen.hide()
     }
 
     private init(): Promise<any> {
@@ -444,7 +455,21 @@ export class GoogleMapComponent implements OnInit {
             })
 
             marker.addListener('click', () => {
-                this.onMarkerClick.emit(place)
+                const infowindow = new google.maps.InfoWindow({
+                    content: `<ion-card>
+                    <ion-card-header>
+                        <ion-card-title>${place.name}</ion-card-title>
+                        <ion-card-subtitle>${place.category}</ion-card-subtitle>
+                    </ion-card-header>
+
+                    <ion-card-content>                                               
+                        <ion-item>Detalhes - ${place.details}</ion-item>
+                    </ion-card-content>
+                </ion-card>`,
+                })
+                infowindow.open(map, marker)
+
+                // this.onMarkerClick.emit(place)
             })
 
             this.markers.push(marker)

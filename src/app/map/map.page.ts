@@ -29,7 +29,6 @@ export class MapPage implements OnInit {
 
     onMarkerClick(placeInfo: Lugar) {
         this.placeInfo = placeInfo
-        console.log(this.placeInfo)
     }
 
     selectRoute(routePosition) {
