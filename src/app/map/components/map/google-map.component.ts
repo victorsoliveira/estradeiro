@@ -29,6 +29,9 @@ export class GoogleMapComponent implements OnInit {
     paradasBtn: ElementRef
 
     @Output()
+    onMarkerClick = new EventEmitter()
+
+    @Output()
     exportFindPlace = new EventEmitter()
 
     @Output()
@@ -312,7 +315,6 @@ export class GoogleMapComponent implements OnInit {
                 return
             }
             if (place.category === CATEGORIA_LUGAR.ESTRADA_PARA_SAUDE) {
-                debugger
                 this.addPlace(place, this.map)
             }
             const contains = google.maps.geometry.poly.containsLocation(
@@ -417,9 +419,18 @@ export class GoogleMapComponent implements OnInit {
     private addPlace(place: Lugar, map: google.maps.Map) {
         let icon
         switch (place.category) {
-            // case CATEGORIA_LUGAR.BORRACHARIA:
-            //     icon = 'assets/map/10.svg'
-            //     break
+            case CATEGORIA_LUGAR.BORRACHARIA:
+                icon = 'assets/map/10.svg'
+                break
+            case CATEGORIA_LUGAR.HOSPEDAGEM:
+                icon = 'assets/map/6.svg'
+                break
+            case CATEGORIA_LUGAR.RESTAURANTE:
+                icon = 'assets/map/2.svg'
+                break
+            case CATEGORIA_LUGAR.OFICINA_MECANICA:
+                icon = 'assets/map/10.svg'
+                break
             case CATEGORIA_LUGAR.ESTRADA_PARA_SAUDE:
                 icon = 'assets/map/14.svg'
                 break
@@ -430,6 +441,10 @@ export class GoogleMapComponent implements OnInit {
                 map: map,
                 title: place.category + `${place.category} - ${place.name}`,
                 icon,
+            })
+
+            marker.addListener('click', () => {
+                this.onMarkerClick.emit(place)
             })
 
             this.markers.push(marker)

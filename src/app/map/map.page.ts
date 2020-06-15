@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core'
 import { IonSearchbar } from '@ionic/angular'
 import { FormControl } from '@angular/forms'
+import { Lugar } from '../models/lugar'
 
 @Component({
     selector: 'app-map',
@@ -12,20 +13,28 @@ export class MapPage implements OnInit {
     searchInput: IonSearchbar
 
     searchQs = new FormControl()
-    routes = null
+    routes = []
 
-    matchedPlaces
+    matchedPlaces = []
     findPlace: any
     showRoutes: boolean
 
     goToDirection
     response: any
 
+    showPlaceInfo
+    placeInfo: any
+
     constructor() {}
+
+    onMarkerClick(placeInfo: Lugar) {
+        this.placeInfo = placeInfo
+        console.log(this.placeInfo)
+    }
 
     selectRoute(routePosition) {
         this.goToDirection(this.response)
-        this.routes = null
+        this.routes = []
     }
 
     onRoutesLoad(routes) {
