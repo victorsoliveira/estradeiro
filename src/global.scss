@@ -47,12 +47,8 @@ body {
 }
 
 app-google-map {
-    ion-toolbar {
-        width: 100% !important;
-    }
-
-    ion-chip {
-        display: block;
+    ion-button {
+        font-size: 12px;
     }
 }
 

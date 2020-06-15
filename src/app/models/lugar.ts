@@ -7,6 +7,7 @@ export enum CATEGORIA_LUGAR {
     BORRACHARIA = 'Borracharia',
     OFICINA_MECANICA = 'Oficina Mecânica',
     HOSPEDAGEM = 'Hospedagem',
+    ESTRADA_PARA_SAUDE = 'Estradas Saúde',
 }
 
 export interface Lugar {

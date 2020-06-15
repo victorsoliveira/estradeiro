@@ -25,6 +25,9 @@ export class GoogleMapComponent implements OnInit {
     @ViewChild('map', { read: ElementRef })
     mapElement: ElementRef
 
+    @ViewChild('button', { read: ElementRef })
+    paradasBtn: ElementRef
+
     @Output()
     exportFindPlace = new EventEmitter()
 
@@ -40,6 +43,7 @@ export class GoogleMapComponent implements OnInit {
     places: Lugar[]
     stoppoints: Object
     lines: any = []
+    currentRoute: any
 
     constructor(private mapService: MapService, private renderer: Renderer2, private element: ElementRef, @Inject(DOCUMENT) private _document) {}
 
@@ -74,8 +78,25 @@ export class GoogleMapComponent implements OnInit {
         this.lines.forEach((line) => {
             line.setMap(null)
         })
+
+        this.addMostrarParadasBtn()
         directionsRenderer.setDirections(response)
+        this.currentRoute = response.routes[0]
         this.element.nativeElement.style.opacity = 1
+    }
+
+    private addMostrarParadasBtn() {
+        this.map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(this.paradasBtn.nativeElement)
+    }
+
+    verParadasRecomendadas(route) {
+        const line = new google.maps.Polyline({
+            path: this.currentRoute.overview_path,
+            strokeOpacity: 1,
+            strokeWeight: 1,
+        })
+        this.setPlacesMarkersOnRoute(line)
+        this.setStopPointsMarkersOnRoute(line)
     }
 
     private init(): Promise<any> {
@@ -285,34 +306,37 @@ export class GoogleMapComponent implements OnInit {
         })
     }
 
-    private setPlaces() {
-        // this.places.forEach((place) => {
-        //     if (place.category === CATEGORIA_LUGAR.PONTO_PARADA) {
-        //         return
-        //     }
-        //     const contains = google.maps.geometry.poly.containsLocation(
-        //         new google.maps.LatLng(parseFloat(place.lat), parseFloat(place.long)),
-        //         new google.maps.Polygon({ paths: line.getPath() })
-        //     )
-        //     if (contains) {
-        //         this.addPlace(place, this.map)
-        //     }
-        // })
-        // ;(this.stoppoints as any).forEach((stoppoint) => {
-        //     const contains = google.maps.geometry.poly.containsLocation(
-        //         new google.maps.LatLng(
-        //             parseFloat(stoppoint.lat) / Math.pow(10, 6),
-        //             parseFloat(stoppoint.long) / Math.pow(10, 6)
-        //         ),
-        //         new google.maps.Polygon({ paths: line.getPath() })
-        //     )
-        //     console.log(contains)
-        //     if (contains) {
-        //         this.addStoppoint(stoppoint, this.map)
-        //     }
-        // })
+    private setPlacesMarkersOnRoute(line) {
+        this.places.forEach((place) => {
+            if (place.category === CATEGORIA_LUGAR.PONTO_PARADA) {
+                return
+            }
+            if (place.category === CATEGORIA_LUGAR.ESTRADA_PARA_SAUDE) {
+                debugger
+                this.addPlace(place, this.map)
+            }
+            const contains = google.maps.geometry.poly.containsLocation(
+                new google.maps.LatLng(parseFloat(place.lat), parseFloat(place.long)),
+                new google.maps.Polygon({ paths: line.getPath() })
+            )
+            if (contains) {
+                this.addPlace(place, this.map)
+            }
+        })
     }
 
+    private setStopPointsMarkersOnRoute(line) {
+        ;(this.stoppoints as any).forEach((stoppoint) => {
+            const contains = google.maps.geometry.poly.containsLocation(
+                new google.maps.LatLng(parseFloat(stoppoint.lat) / Math.pow(10, 6), parseFloat(stoppoint.long) / Math.pow(10, 6)),
+                new google.maps.Polygon({ paths: line.getPath() })
+            )
+            if (contains) {
+                console.log(contains)
+                this.addStoppoint(stoppoint, this.map)
+            }
+        })
+    }
     private getPlaceDetails(place): Promise<google.maps.places.PlaceResult> {
         return new Promise((resolve) => {
             const request = {
@@ -393,30 +417,23 @@ export class GoogleMapComponent implements OnInit {
     private addPlace(place: Lugar, map: google.maps.Map) {
         let icon
         switch (place.category) {
-            case CATEGORIA_LUGAR.BORRACHARIA:
-                icon = 'assets/map/10.svg'
-                break
-            case CATEGORIA_LUGAR.HOSPEDAGEM:
-                icon = 'assets/map/6.svg'
-                break
-            case CATEGORIA_LUGAR.RESTAURANTE:
-                icon = 'assets/map/2.svg'
-                break
-            case CATEGORIA_LUGAR.OFICINA_MECANICA:
-                icon = 'assets/map/10.svg'
-                break
-            default:
-                icon = null
+            // case CATEGORIA_LUGAR.BORRACHARIA:
+            //     icon = 'assets/map/10.svg'
+            //     break
+            case CATEGORIA_LUGAR.ESTRADA_PARA_SAUDE:
+                icon = 'assets/map/14.svg'
                 break
         }
-        var marker = new google.maps.Marker({
-            position: { lat: parseFloat(place.lat), lng: parseFloat(place.long) },
-            map: map,
-            title: place.category + `${place.category} - ${place.name}`,
-            icon,
-        })
+        if (icon) {
+            var marker = new google.maps.Marker({
+                position: { lat: parseFloat(place.lat), lng: parseFloat(place.long) },
+                map: map,
+                title: place.category + `${place.category} - ${place.name}`,
+                icon,
+            })
 
-        this.markers.push(marker)
+            this.markers.push(marker)
+        }
     }
 
     private addStoppoint(stopPoint: PontoDeParada, map: google.maps.Map) {
